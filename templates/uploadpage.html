@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Upload - NotesNest</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-image: url("/static/bg2.jpg");
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+
+        /* --- Navigation Links --- */
+        .navbar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-right: 15px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+
+        .navbar a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* --- The Transparent Center Box --- */
+        .upload-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            text-align: center;
+            color: white;
+        }
+
+        .upload-box h2 {
+            margin-bottom: 25px;
+            font-size: 26px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* --- Styled Form Elements --- */
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            outline: none;
+        }
+
+        /* Fix for dropdown text visibility */
+        select option {
+            background: #2a2a72;
+            color: white;
+        }
+
+        .upload-btn {
+            background: white;
+            color: #2a2a72;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .welcome{
+            margin-top:20px;
+            font-size:26px;
+            color:white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="/homepage">Home</a>
+        <a href="/notes">Notes</a>
+        <a href="/myacc">Settings</a>
+    </div>
+
+    <div class="upload-box">
+        <h2>Upload Your Notes</h2>
+
+        <div class="form-group">
+            <label>Select Semester</label>
+            <select id="semSelect">
+                <option value="">-- Choose Semester --</option>
+                <option value="sem1">Semester 1</option>
+                <option value="sem2">Semester 2</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Note Title</label>
+            <input type="text" id="noteTitle" placeholder="e.g. Unit 1 Notes">
+        </div>
+
+        <div class="form-group">
+            <label>Select File (PDF)</label>
+            <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.ppt,.pptx">
+        </div>
+
+        <button class="upload-btn" id="uploadBtn" onclick="saveUpload()">Upload to My Notes</button>
+    </div>
+
+    <script>
+    function checkLogin() {
+        const user_id = localStorage.getItem('user_id');
+        if (!user_id) {
+            window.location.href = '/login';
+        }
+    }
+
+    async function saveUpload() {
+        const semester = document.getElementById('semSelect').value;
+        const title    = document.getElementById('noteTitle').value.trim();
+        const file     = document.getElementById('fileInput').files[0];
+        const user_id  = localStorage.getItem('user_id');
+
+        if (!user_id) {
+            alert('Please login first.');
+            window.location.href = '/login';
+            return;
+        }
+
+        if (!semester || !title || !file) {
+            alert('Please fill all fields and select a file.');
+            return;
+        }
+
+        const btn = document.getElementById('uploadBtn');
+        btn.disabled = true;
+        btn.textContent = 'Uploading...';
+
+        const formData = new FormData();
+        formData.append('noteFile', file);
+        formData.append('semester', semester);
+        formData.append('title', title);
+        formData.append('user_id', user_id);
+
+        try {
+            const res = await fetch('/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (res.ok) {
+                alert('✅ Uploaded successfully!');
+                document.getElementById('semSelect').value = '';
+                document.getElementById('noteTitle').value = '';
+                document.getElementById('fileInput').value = '';
+            } else {
+                alert('Error: ' + (data.error || 'Upload failed.'));
+            }
+        } catch (e) {
+            alert('Could not connect to server.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Upload to My Notes';
+        }
+    }
+
+    window.onload = checkLogin;
+    </script>
+</body>
+</html>

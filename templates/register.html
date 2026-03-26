@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <style>
+        body {
+            background-image: url("/static/bg1.jpg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            font-family: arial, sans-serif;
+        }
+        .container {
+            width: 500px;
+            background-color: rgba(175, 118, 228, 0.842);
+            padding: 25px;
+            margin: 100px auto;
+            border-radius: 10px;
+            text-align: center;
+        }
+        input {
+            width: 70%;
+            padding: 10px;
+            margin: 8px 0;
+        }
+        button {
+            width: 40%;
+            padding: 10px;
+            background-color: blueviolet;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #bc76eb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Create Account</h2>
+    <input type="text" id="fullname" placeholder="Full Name" required>
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <input type="password" id="confirmpassword" placeholder="Confirm Password" required>
+
+    <button id="regBtn" onclick="registerUser()">Register</button>
+    <p>Already have an account? <a href="/login">Login</a></p>
+</div>
+
+<script>
+async function registerUser() {
+    const full_name        = document.getElementById('fullname').value.trim();
+    const username         = document.getElementById('username').value.trim();
+    const email            = document.getElementById('email').value.trim();
+    const password         = document.getElementById('password').value;
+    const confirm_password = document.getElementById('confirmpassword').value;
+
+    if (!full_name || !username || !email || !password || !confirm_password) {
+        alert('Please fill in all fields.');
+        return;
+    }
+
+    if (password !== confirm_password) {
+        alert('Passwords do not match.');
+        return;
+    }
+
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters.');
+        return;
+    }
+
+    const btn = document.getElementById('regBtn');
+    btn.disabled = true;
+    btn.textContent = 'Registering...';
+
+    try {
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ full_name, username, email, password, confirm_password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Registration Successful! Please login.');
+            window.location.href = '/login';
+        } else {
+            alert('Error: ' + (data.error || 'Failed to register'));
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Could not connect to server.');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Register';
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>NotesNest</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-image: url("/static/bg2.jpg");
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+        }
+        header {
+            color: whitesmoke;
+            padding: 20px;
+            font-size: 50px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 20px;
+            font-weight: bold;
+        }
+        .bottom-content {
+            position: absolute;
+            bottom: 40px;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Search bar */
+        .search-box input{
+            width:350px;
+            padding:12px;
+            font-size:16px;
+            border:none;
+            border-radius:25px;
+        }
+
+        .search-box button{
+            padding:12px 20px;
+            font-size:16px;
+            background:blueviolet;
+            color:white;
+            border:none;
+            border-radius:25px;
+            cursor:pointer;
+        }
+
+        /* Welcome text */
+        .welcome{
+            margin-top:20px;
+            font-size:26px;
+            color:white;
+        }
+    </style>
+</head>
+<body>
+    <header>NotesNest</header>
+    <nav>
+        <a href="/homepage">home</a>
+        <a href="/upload">upload</a>
+        <a href="/notes">notes</a>
+        <a href="/myacc">my account</a>
+        <a href="#" onclick="logout()">logout</a>
+    </nav>
+    <div class="bottom-content">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Search notes...">
+            <button onclick="searchNotes()">Search</button>
+        </div>
+        <div id="resultsArea"></div>
+        <div class="welcome" id="welcomeMessage">Loading profile...</div>
+    </div>
+    <script>
+        function loadProfile() {
+            const user_id = localStorage.getItem('user_id');
+            if (!user_id) {
+                window.location.href = '/login';
+                return;
+            }
+            const full_name = localStorage.getItem('full_name') || 'User';
+            document.getElementById('welcomeMessage').textContent = 'Welcome, ' + full_name + '!';
+        }
+
+        async function searchNotes() {
+            const q = document.getElementById('searchInput').value.trim();
+            if (!q) return;
+
+            try {
+                const res = await fetch('/search-notes?q=' + encodeURIComponent(q));
+                const results = await res.json();
+                const area = document.getElementById('resultsArea');
+
+                if (!results.length) {
+                    area.innerHTML = '<p style="color:white">No results found.</p>';
+                    return;
+                }
+
+                area.innerHTML = results.map(n =>
+                    `<div style="color:white;margin:5px 0">
+                        <a href="${n.file_url}" style="color:cyan" target="_blank">${n.title}</a> — ${n.semester}
+                    </div>`
+                ).join('');
+            } catch (e) {
+                document.getElementById('resultsArea').innerHTML = '<p style="color:white">Search failed.</p>';
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login';
+        }
+
+        // Allow pressing Enter to search
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') searchNotes();
+        });
+
+        window.onload = loadProfile;
+    </script>
+</body>
+</html>
